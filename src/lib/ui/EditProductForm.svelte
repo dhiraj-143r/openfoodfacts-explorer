@@ -4,7 +4,6 @@
 	import LanguagesStep from './edit-product-steps/LanguagesStep.svelte';
 	import IngredientsStep from './edit-product-steps/IngredientsStep.svelte';
 	import NutritionStep from './edit-product-steps/NutritionStep.svelte';
-	import CommentStep from './edit-product-steps/CommentStep.svelte';
 	import StickyEditSaveButton from './StickyEditSaveButton.svelte';
 
 	import IconMdiTranslate from '@iconify-svelte/mdi/translate';
@@ -12,7 +11,6 @@
 	import IconMdiInformation from '@iconify-svelte/mdi/information';
 	import IconMdiFormatListBulleted from '@iconify-svelte/mdi/format-list-bulleted';
 	import IconMdiNutrition from '@iconify-svelte/mdi/nutrition';
-	import IconMdiCommentText from '@iconify-svelte/mdi/comment-text';
 
 	import type { Product } from '$lib/api';
 	import { _ } from '$lib/i18n';
@@ -63,32 +61,10 @@
 		isSubmitting,
 		submit
 	}: Props = $props();
-
-	/**
-	 * Track whether the inline save button at the bottom is out of viewport.
-	 * When it scrolls out of view, the sticky floating button becomes visible.
-	 */
-	let inlineSaveButtonEl: HTMLDivElement | undefined = $state();
-	let showStickyButton = $state(false);
-
-	$effect(() => {
-		if (!inlineSaveButtonEl) return;
-
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				// Show sticky button when inline button is NOT visible
-				showStickyButton = !entry.isIntersecting;
-			},
-			{ threshold: 0.1 }
-		);
-
-		observer.observe(inlineSaveButtonEl);
-
-		return () => observer.disconnect();
-	});
 </script>
 
-<div class="space-y-4">
+<!-- pb-24 ensures the last section is not hidden behind the fixed floating bar -->
+<div class="space-y-4 pb-24">
 	<!-- Languages Section -->
 	<div class="collapse-arrow bg-base-200 collapse shadow-md">
 		<input type="checkbox" checked={$preferences.editing.expandAllSections} />
@@ -157,32 +133,7 @@
 			<NutritionStep bind:product {getNutritionImage} {handleNutrimentInput} />
 		</div>
 	</div>
-
-	<!-- Comment Section -->
-	<div class="collapse-arrow bg-base-200 collapse shadow-md">
-		<input type="checkbox" checked={$preferences.editing.expandAllSections} />
-		<div class="collapse-title flex items-center text-sm font-bold sm:text-base">
-			<IconMdiCommentText class="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-			{$_('product.edit.sections.comment')}
-		</div>
-		<div class="collapse-content">
-			<CommentStep bind:comment />
-		</div>
-	</div>
-
-	<!-- Inline save button at form bottom — acts as anchor for the IntersectionObserver -->
-	<div class="mt-8 flex justify-end" bind:this={inlineSaveButtonEl}>
-		<button
-			class="btn btn-primary w-full text-sm sm:w-auto sm:text-base"
-			class:loading={isSubmitting}
-			onclick={submit}
-			disabled={isSubmitting}
-			type="button"
-		>
-			{$_('product.edit.save_btn')}
-		</button>
-	</div>
 </div>
 
-<!-- Sticky floating save button — appears when inline button scrolls out of view -->
-<StickyEditSaveButton {isSubmitting} {submit} visible={showStickyButton} />
+<!-- Floating comment + save bar — always visible at bottom of viewport -->
+<StickyEditSaveButton {isSubmitting} {submit} bind:comment />
